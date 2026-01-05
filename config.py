@@ -25,7 +25,7 @@ YTPROXY_URL = getenv("YTPROXY_URL", 'https://tgapi.xbitcode.com') ## xBit Music 
 YT_API_KEY = getenv("YT_API_KEY" , 'StrangerApidc3ee10' ) ## Your API key like: xbit_10000000xx0233 Get from  https://t.me/tgmusic_apibot
 
 
-UPSTREAM_REPO = getenv("UPSTREAM_REPO", "https://github.com/TOXICPAPA00/NORMAL_MUSIC")
+UPSTREAM_REPO = getenv("UPSTREAM_REPO", "https://github.com/Souradipkundu1234/MUSICBOT")
 UPSTREAM_BRANCH = getenv("UPSTREAM_BRANCH", "main")
 GIT_TOKEN = getenv("GIT_TOKEN", None)
 
