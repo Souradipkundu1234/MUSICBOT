@@ -30,7 +30,7 @@ UPSTREAM_BRANCH = getenv("UPSTREAM_BRANCH", "main")
 GIT_TOKEN = getenv("GIT_TOKEN", None)
 
 SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/AntaraUPDATES")
-SUPPORT_CHAT = getenv("SUPPORT_CHAT", ("https://t.me/+VQzGSn36Gzc5ZDY1") 
+SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/+VQzGSn36Gzc5ZDY1") 
 
 AUTO_LEAVING_ASSISTANT = bool(getenv("AUTO_LEAVING_ASSISTANT", False))
 
