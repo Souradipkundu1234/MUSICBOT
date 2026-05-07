@@ -30,7 +30,7 @@ UPSTREAM_BRANCH = getenv("UPSTREAM_BRANCH", "main")
 GIT_TOKEN = getenv("GIT_TOKEN", None)
 
 SUPPORT_CHANNEL = getenv("SUPPORT_CHANNEL", "https://t.me/AntaraUPDATES")
-SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/+VQzGSn36Gzc5ZDY1") 
+SUPPORT_CHAT = getenv("SUPPORT_CHAT", "https://t.me/AntaraUpdates") 
 
 AUTO_LEAVING_ASSISTANT = bool(getenv("AUTO_LEAVING_ASSISTANT", False))
 
@@ -55,7 +55,7 @@ votemode = {}
 autoclean = []
 confirmer = {}
 
-START_IMG_URL = getenv("START_IMG_URL", "https://files.catbox.moe/fu6jk3.jpg")
+START_IMG_URL = getenv("START_IMG_URL", "https://files.catbox.moe/zbll2s.jpg")
 PING_IMG_URL = getenv("PING_IMG_URL", "https://files.catbox.moe/26nzoq.jpg")
 PLAYLIST_IMG_URL = "https://files.catbox.moe/f2s4ws.jpg"
 STATS_IMG_URL = "https://files.catbox.moe/z0gh23.jpg"
