@@ -17,7 +17,7 @@
 
 <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
 <h1 align="center"><b>𝐓ᴇᴀᴍ 𝐈ꜱʜᴀ 𝐁ᴏᴛs</b></h1>
-<p align="center"><a href="https://t.me/lll_TOXICC_PAPA_lll"><img src="https://files.catbox.moe/mb2et6.jpg" width="400"></a></p>
+<p align="center"><a href="https://t.me/lll_TOXICC_PAPA_lll"><img src="https://files.catbox.moe/twomj2.jpg" width="400"></a></p>
 <img src="https://user-images.githubusercontent.com/73097560/115834477-dbab4500-a447-11eb-908a-139a6edaec5c.gif">
 
 </p>
