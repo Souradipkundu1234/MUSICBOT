@@ -2,18 +2,20 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-COPY requirements.txt .
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+# system packages install (NO repo edit needed)
+RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    aria2 \
     git \
-    aria2 && \
-    rm -rf /var/lib/apt/lists/*
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*
 
-RUN pip install --upgrade pip && \
+# requirements install
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
+# copy project
 COPY . .
 
-CMD ["bash", "start"]
+CMD ["python", "main.py"]
