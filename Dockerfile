@@ -1,22 +1,28 @@
-FROM python:3.11-slim
+FROM nikolaik/python-nodejs:python3.11-nodejs20-slim
 
 WORKDIR /app
 
-# system dependencies (NO repo editing, NO sed)
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8080
+
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     aria2 \
     git \
- && apt-get clean \
+    curl \
  && rm -rf /var/lib/apt/lists/*
 
-# install python requirements
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
-# copy project files
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
 COPY . .
 
-# run bot
+RUN useradd -m appuser && chown -R appuser /app
+USER appuser
+
+EXPOSE 8080
+
 CMD ["python", "main.py"]
