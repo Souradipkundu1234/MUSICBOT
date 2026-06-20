@@ -5,28 +5,43 @@ from SONALI import app
 
 
 def start_panel(_):
+    bot_username = app.username or "your_bot_username"
+
     buttons = [
         [
             InlineKeyboardButton(
-                text=_["S_B_1"], url=f"https://t.me/{app.username}?startgroup=true"
+                text=_["S_B_1"],
+                url=f"https://t.me/{bot_username}?startgroup=true"
             ),
-            InlineKeyboardButton(text=_["S_B_2"], url=config.SUPPORT_CHAT),
+            InlineKeyboardButton(
+                text=_["S_B_2"],
+                url=config.SUPPORT_CHAT
+            ),
         ],
     ]
+
     return buttons
 
 
 def private_panel(_):
+    bot_username = app.username or "your_bot_username"
+
     buttons = [
         [
             InlineKeyboardButton(
                 text=_["S_B_3"],
-                url=f"https://t.me/{app.username}?startgroup=true",
+                url=f"https://t.me/{bot_username}?startgroup=true",
             )
         ],
         [
-            InlineKeyboardButton(text=_["S_B_5"], user_id=config.OWNER_ID),
-            InlineKeyboardButton(text=_["S_B_2"], url=config.SUPPORT_CHAT),
+            InlineKeyboardButton(
+                text=_["S_B_5"],
+                url=f"tg://user?id={config.OWNER_ID}"
+            ),
+            InlineKeyboardButton(
+                text=_["S_B_2"],
+                url=config.SUPPORT_CHAT
+            ),
         ],
         [
             InlineKeyboardButton(
@@ -35,4 +50,5 @@ def private_panel(_):
             )
         ],
     ]
+
     return buttons
