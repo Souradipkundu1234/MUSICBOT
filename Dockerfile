@@ -1,18 +1,20 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
-WORKDIR /app
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg \
-    aria2 \
-    git \
- && apt-get clean \
- && rm -rf /var/lib/apt/lists/*
+COPY . /app/
+WORKDIR /app/
 
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl ca-certificates bash ffmpeg git zip build-essential python3-dev libssl-dev libffi-dev pkg-config \
+    && uv sync --frozen --no-install-project \
+    && apt-get remove -y --purge build-essential python3-dev libssl-dev libffi-dev pkg-config \
+    && apt-get autoremove -y \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-COPY . .
+# Add .venv/bin to PATH
+ENV PATH="/app/.venv/bin:$PATH"
 
-CMD ["python", "main.py"]
+CMD ["bash", "start"]
