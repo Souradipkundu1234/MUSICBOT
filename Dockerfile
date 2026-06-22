@@ -1,19 +1,17 @@
-FROM python:3.11-slim
+FROM nikolaik/python-nodejs:python3.11-nodejs19
 
-WORKDIR /app
-
-COPY . /app
-
-# 🔥 Fix all apt issues + remove Yarn repo + install system packages
-RUN rm -f /etc/apt/sources.list.d/yarn.list || true && \
-    sed -i '/yarnpkg/d' /etc/apt/sources.list || true && \
+RUN rm -f /etc/apt/sources.list.d/yarn.list && \
+    sed -i 's|http://deb.debian.org/debian|http://archive.debian.org/debian|g' /etc/apt/sources.list && \
+    sed -i '/security.debian.org/d' /etc/apt/sources.list && \
     apt-get update && \
-    apt-get install -y --no-install-recommends ffmpeg git aria2 curl && \
+    apt-get install -y --no-install-recommends ffmpeg aria2 && \
+    apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# 🔥 Python setup
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+COPY . /app/
+WORKDIR /app/
 
-# 🚀 Run app
-CMD ["python", "main.py"]
+RUN python -m pip install --no-cache-dir --upgrade pip
+RUN pip3 install --no-cache-dir --upgrade -r requirements.txt
+
+CMD bash start
