@@ -1,217 +1,159 @@
-𝛅𝛊‌֯֟፝𝛈 x‌:
 import os
 import re
 import aiofiles
 import aiohttp
-from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
+from unidecode import unidecode
 from py_yt import VideosSearch
 from SONALI import app
+from config import YOUTUBE_IMG_URL
 
+def changeImageSize(maxWidth, maxHeight, image):
+    widthRatio = maxWidth / image.size[0]
+    heightRatio = maxHeight / image.size[1]
+    newWidth = int(widthRatio * image.size[0])
+    newHeight = int(heightRatio * image.size[1])
+    newImage = image.resize((newWidth, newHeight))
+    return newImage
 
 def truncate(text):
-    words = text.split()
-    line1 = ""
-    line2 = ""
+    list = text.split(" ")
+    text1 = ""
+    text2 = ""    
+    for i in list:
+        if len(text1) + len(i) < 30:        
+            text1 += " " + i
+        elif len(text2) + len(i) < 30:       
+            text2 += " " + i
 
-    for word in words:
-        if len(line1 + " " + word) <= 30:
-            line1 += " " + word
-        elif len(line2 + " " + word) <= 30:
-            line2 += " " + word
-        else:
-            break
+    text1 = text1.strip()
+    text2 = text2.strip()     
+    return [text1,text2]
 
-    return [line1.strip(), line2.strip()]
+def crop_center_circle(img, output_size, border, crop_scale=1.5):
+    half_the_width = img.size[0] / 2
+    half_the_height = img.size[1] / 2
+    larger_size = int(output_size * crop_scale)
+    img = img.crop(
+        (
+            half_the_width - larger_size/2,
+            half_the_height - larger_size/2,
+            half_the_width + larger_size/2,
+            half_the_height + larger_size/2
+        )
+    )
+    
+    img = img.resize((output_size - 2*border, output_size - 2*border))
+    
+    
+    final_img = Image.new("RGBA", (output_size, output_size), "white")
+    
+    
+    mask_main = Image.new("L", (output_size - 2*border, output_size - 2*border), 0)
+    draw_main = ImageDraw.Draw(mask_main)
+    draw_main.ellipse((0, 0, output_size - 2*border, output_size - 2*border), fill=255)
+    
+    final_img.paste(img, (border, border), mask_main)
+    
+    
+    mask_border = Image.new("L", (output_size, output_size), 0)
+    draw_border = ImageDraw.Draw(mask_border)
+    draw_border.ellipse((0, 0, output_size, output_size), fill=255)
+    
+    result = Image.composite(final_img, Image.new("RGBA", final_img.size, (0, 0, 0, 0)), mask_border)
+    
+    return result
+
 
 
 async def get_thumb(videoid):
-    output_path = f"cache/{videoid}_v4.png"
+    if os.path.isfile(f"cache/{videoid}_v4.png"):
+        return f"cache/{videoid}_v4.png"
 
-    if os.path.isfile(output_path):
-        return output_path
-
-    # =========================
-    # Fetch YouTube Video Data
-    # =========================
     url = f"https://www.youtube.com/watch?v={videoid}"
     results = VideosSearch(url, limit=1)
-
-    title = "Unsupported Title"
-    duration = "Unknown"
-    views = "Unknown Views"
-    thumbnail = None
-
     for result in (await results.next())["result"]:
-        title = re.sub(r"\W+", " ", result.get("title", "Unsupported Title")).title()
-        duration = result.get("duration", "Unknown")
-        views = result.get("viewCount", {}).get("short", "Unknown Views")
+        try:
+            title = result["title"]
+            title = re.sub("\W+", " ", title)
+            title = title.title()
+        except:
+            title = "Unsupported Title"
+        try:
+            duration = result["duration"]
+        except:
+            duration = "Unknown Mins"
         thumbnail = result["thumbnails"][0]["url"].split("?")[0]
-
-    if not thumbnail:
-        raise Exception("Thumbnail not found")
-
-    # =========================
-    # Download Thumbnail
-    # =========================
-    thumb_path = f"cache/thumb_{videoid}.jpg"
+        try:
+            views = result["viewCount"]["short"]
+        except:
+            views = "Unknown Views"
+        try:
+            channel = result["channel"]["name"]
+        except:
+            channel = "Unknown Channel"
 
     async with aiohttp.ClientSession() as session:
         async with session.get(thumbnail) as resp:
             if resp.status == 200:
-                async with aiofiles.open(thumb_path, "wb") as f:
-                    await f.write(await resp.read())
+                f = await aiofiles.open(f"cache/thumb{videoid}.png", mode="wb")
+                await f.write(await resp.read())
+                await f.close()
 
-    youtube = Image.open(thumb_path).convert("RGB")
+    youtube = Image.open(f"cache/thumb{videoid}.png")
+    image1 = changeImageSize(1280, 720, youtube)
+    image2 = image1.convert("RGBA")
+    background = image2.filter(filter=ImageFilter.BoxBlur(20))
+    enhancer = ImageEnhance.Brightness(background)
+    background = enhancer.enhance(0.6)
+    draw = ImageDraw.Draw(background)
+    arial = ImageFont.truetype("SONALI/assets/font2.ttf", 30)
+    font = ImageFont.truetype("SONALI/assets/font.ttf", 30)
+    title_font = ImageFont.truetype("SONALI/assets/font3.ttf", 45)
 
-    # =========================
-    # Background
-    # =========================
-    bg = youtube.resize((1280, 720))
-    bg = bg.filter(ImageFilter.GaussianBlur(25))
-    bg = ImageEnhance.Brightness(bg).enhance(0.35)
-    bg = bg.convert("RGBA")
 
-    # Dark overlay
-    overlay = Image.new("RGBA", bg.size, (0, 0, 0, 120))
-    bg = Image.alpha_composite(bg, overlay)
+    circle_thumbnail = crop_center_circle(youtube, 400, 20)
+    circle_thumbnail = circle_thumbnail.resize((400, 400))
+    circle_position = (120, 160)
+    background.paste(circle_thumbnail, circle_position, circle_thumbnail)
 
-    draw = ImageDraw.Draw(bg)
+    text_x_position = 565title1 = truncate(title)
+    draw.text((text_x_position, 180), title1[0], fill=(255, 255, 255), font=title_font)
+    draw.text((text_x_position, 230), title1[1], fill=(255, 255, 255), font=title_font)
+    draw.text((text_x_position, 320), f"{channel}  |  {views[:23]}", (255, 255, 255), font=arial)
 
-    # =========================
-    # Fonts
-    # =========================
-    font_title = ImageFont.truetype("SONALI/assets/font3.ttf", 52)
-    font_text = ImageFont.truetype("SONALI/assets/font2.ttf", 36)
-    font_small = ImageFont.truetype("SONALI/assets/font2.ttf", 28)
-    font_now = ImageFont.truetype("SONALI/assets/font.ttf", 32)
+    
+    line_length = 580  
 
-    # =========================
-    # Left Thumbnail with Rounded Border
-    # =========================
-    thumb = youtube.resize((420, 420)).convert("RGBA")
+    
+    red_length = int(line_length * 0.6)
+    white_length = line_length - red_length
 
-    # Golden border canvas
-    thumb_canvas = Image.new("RGBA", (460, 460), (0, 0, 0, 0))
-    canvas_draw = ImageDraw.Draw(thumb_canvas)
+    
+    start_point_red = (text_x_position, 380)
+    end_point_red = (text_x_position + red_length, 380)
+    draw.line([start_point_red, end_point_red], fill="red", width=9)
 
-    # Outer golden rounded rectangle
-    canvas_draw.rounded_rectangle(
-        (0, 0, 460, 460),
-        radius=40,
-        fill=(255, 215, 0, 255)
-    )
+    
+    start_point_white = (text_x_position + red_length, 380)
+    end_point_white = (text_x_position + line_length, 380)
+    draw.line([start_point_white, end_point_white], fill="white", width=8)
 
-    # Rounded mask for image
-    mask = Image.new("L", (420, 420), 0)
-    mask_draw = ImageDraw.Draw(mask)
-    mask_draw.rounded_rectangle((0, 0, 420, 420), radius=30, fill=255)
+    
+    circle_radius = 10 
+    circle_position = (end_point_red[0], end_point_red[1])
+    draw.ellipse([circle_position[0] - circle_radius, circle_position[1] - circle_radius,
+                  circle_position[0] + circle_radius, circle_position[1] + circle_radius], fill="red")
+    draw.text((text_x_position, 400), "00:00", (255, 255, 255), font=arial)
+    draw.text((1080, 400), duration, (255, 255, 255), font=arial)
 
-    thumb_canvas.paste(thumb, (20, 20), mask)
+    play_icons = Image.open("SONALI/assets/play_icons.png")
+    play_icons = play_icons.resize((580, 62))
+    background.paste(play_icons, (text_x_position, 450), play_icons)
 
-    # Paste to background
-    bg.paste(thumb_canvas, (80, 130), thumb_canvas)
-
-    # =========================
-    # NOW PLAYING Badge
-    # =========================
-    draw.rounded_rectangle(
-        (650, 90, 930, 155),
-        radius=30,
-        fill=(255, 215, 0)
-    )
-    draw.text((705, 105), "NOW PLAYING", font=font_now, fill="black")
-
-    # =========================
-    # Title
-    # =========================
-    lines = truncate(title)
-    draw.text((650, 190), lines[0], font=font_title, fill="white")
-    if lines[1]:
-        draw.text((650, 250), lines[1], font=font_title, fill="white")
-
-    # Underline
-    draw.line((650, 330, 1180, 330), fill=(255, 215, 0), width=4)# =========================
-    # Video Info
-    # =========================
-    draw.text((650, 370), f"Duration :  {duration}", font=font_text, fill="white")
-    draw.text((650, 430), f"Views :  {views}", font=font_text, fill="white")
-
-    bot_username = getattr(app, "username", None)
-    if bot_username:
-        player_text = f"Player :  @{bot_username}"
-    else:
-        player_text = "Powered By :  @AntaraUpdates"
-
-    draw.text(
-        (650, 490),
-        player_text,
-        font=font_text,
-        fill=(255, 215, 0)
-    )
-
-    # =========================
-    # Progress Bar
-    # =========================
-    bar_x1 = 650
-    bar_x2 = 1180
-    bar_y = 585
-    progress = 0.60  # 60%
-
-    # Background line
-    draw.rectangle(
-        (bar_x1, bar_y, bar_x2, bar_y + 8),
-        fill=(200, 200, 200)
-    )
-
-    # Progress line
-    progress_x = bar_x1 + int((bar_x2 - bar_x1) * progress)
-    draw.rectangle(
-        (bar_x1, bar_y, progress_x, bar_y + 8),
-        fill=(255, 215, 0)
-    )
-
-    # Knob
-    draw.ellipse(
-        (progress_x - 8, bar_y - 8, progress_x + 8, bar_y + 16),
-        fill=(255, 215, 0)
-    )
-
-    # Time labels
-    draw.text((650, 605), "00:00", font=font_small, fill="white")
-
-    duration_bbox = draw.textbbox((0, 0), duration, font=font_small)
-    duration_width = duration_bbox[2] - duration_bbox[0]
-    draw.text(
-        (1180 - duration_width, 605),
-        duration,
-        font=font_small,
-        fill="white"
-    )
-
-    # =========================
-    # Developer Credit
-    # =========================
-    dev_text = "Dev :- @TrigXArea"  # এখানে নিজের username দিন
-
-    dev_bbox = draw.textbbox((0, 0), dev_text, font=font_small)
-    dev_width = dev_bbox[2] - dev_bbox[0]
-
-    draw.text(
-        (1280 - dev_width - 40, 670),
-        dev_text,
-        font=font_small,
-        fill=(255, 215, 0)
-    )
-
-    # =========================
-    # Save Output
-    # =========================
-    bg.convert("RGB").save(output_path)
-
-    # Cleanup
     try:
-        os.remove(thumb_path)
+        os.remove(f"cache/thumb{videoid}.png")
     except:
         pass
-
-    return output_path
+    background.save(f"cache/{videoid}_v4.png")
+    return f"cache/{videoid}_v4.png"
